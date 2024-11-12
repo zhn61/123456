@@ -1,0 +1,98 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <windows.h>  // Sleep을 사용하기 위한 헤더
+
+#define WIDTH 11
+#define HEIGHT 5
+#define SCREEN_WIDTH 40   // 화면 너비
+#define SCREEN_HEIGHT 20  // 화면 높이
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846  // 원주율 값 정의
+#endif
+
+void clearScreen() {
+#ifdef _WIN32
+    system("cls");  // Windows의 경우
+#else
+    system("clear");  // Unix/Linux의 경우
+#endif
+}
+
+double degToRad(double degrees) {
+    return degrees * M_PI / 180.0;
+}
+
+// 회전 변환을 통해 점 (x, y)를 회전시키는 함수
+void rotatePoint(double* x, double* y, double angle) {
+    double rad = degToRad(angle);
+    double newX = *x * cos(rad) - *y * sin(rad);
+    double newY = *x * sin(rad) + *y * cos(rad);
+    *x = newX;
+    *y = newY;
+}
+
+// 사각형을 채운 상태로 그리기
+void printFilledRectangle(double vertices[4][2], double angle) {
+    char screen[SCREEN_HEIGHT][SCREEN_WIDTH];
+
+    // 화면 초기화 (빈 공간)
+    for (int i = 0; i < SCREEN_HEIGHT; i++) {
+        for (int j = 0; j < SCREEN_WIDTH; j++) {
+            screen[i][j] = ' ';
+        }
+    }
+
+    // 화면의 중심 좌표
+    int centerX = SCREEN_WIDTH / 2;
+    int centerY = SCREEN_HEIGHT / 2;
+
+    // 각 좌표를 회전시키고 그 위치에 '*'를 표시
+    for (int y = -HEIGHT / 2; y <= HEIGHT / 2; y++) {
+        for (int x = -WIDTH / 2; x <= WIDTH / 2; x++) {
+            double rotatedX = x;
+            double rotatedY = y;
+
+            // 회전 처리
+            rotatePoint(&rotatedX, &rotatedY, angle);
+
+            // 회전된 좌표를 화면에 맞게 변환
+            int screenX = (int)(rotatedX + centerX);
+            int screenY = (int)(rotatedY + centerY);
+
+            // 화면 범위 안에 있을 때만 출력
+            if (screenX >= 0 && screenX < SCREEN_WIDTH && screenY >= 0 && screenY < SCREEN_HEIGHT) {
+                screen[screenY][screenX] = '*';
+            }
+        }
+    }
+
+    // 화면 출력
+    for (int i = 0; i < SCREEN_HEIGHT; i++) {
+        for (int j = 0; j < SCREEN_WIDTH; j++) {
+            printf("%c", screen[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    double angle = 0.0;
+
+    while (1) {
+        clearScreen();  // 화면을 지운다
+        printFilledRectangle(NULL, angle);  // 회전하는 사각형만 그린다
+
+        // 회전 각도 업데이트
+        angle += 2.0;  // 2도씩 회전 (속도 증가)
+
+        if (angle >= 360.0) {
+            angle -= 360.0;  // 360도를 넘어가면 다시 0으로 돌아가게
+        }
+
+        Sleep(10);  // 10ms 대기 (Windows에서만) - 빠른 회전
+    }
+
+    return 0;
+}
